@@ -16,7 +16,7 @@ Pisos y objetivos se fijan con referencias canadienses o rangos metropolitanos p
 
 ## Pesos
 
-El usuario asigna rangos únicos 1–16. Se convierten en pesos lineales tipo Borda: `peso(r) = (N − r + 1) / Σ(1…N)`. El score final es la suma de `score de categoría × peso`.
+El usuario asigna rangos únicos 1–16. Se convierten en pesos **Rank-Order Centroid (ROC)**: `peso(r) = (1/N) × Σ(j=r…N) 1/j`. Este método se usa cuando conocemos el orden de importancia, pero no una intensidad cardinal exacta. Con 16 categorías, las tres primeras reciben aproximadamente 21.1%, 14.9% y 11.7%; todas las categorías conservan peso y juntas suman 100%. El score final es la suma de `score de categoría × peso`.
 
 ## Calidad
 

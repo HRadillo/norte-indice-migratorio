@@ -25,31 +25,55 @@ const categoryEmoji: Record<string, string> = {
   systems: "⚡",
 };
 
+const rankOrderCentroidWeights = (count: number) =>
+  Array.from({ length: count }, (_, index) => {
+    let weight = 0;
+    for (let rank = index + 1; rank <= count; rank += 1) {
+      weight += 1 / rank;
+    }
+    return weight / count;
+  });
+
 export default function Home() {
   const [order, setOrder] = useState(initialOrder),
     [selected, setSelected] = useState("water"),
-    [view, setView] = useState<"ranking" | "matrix" | "sources">("ranking");
+    [view, setView] = useState<"ranking" | "matrix" | "sources">("ranking"),
+    [draggedId, setDraggedId] = useState<string | null>(null),
+    [dragOverId, setDragOverId] = useState<string | null>(null);
   const ranks = useMemo(
     () => Object.fromEntries(order.map((id, i) => [id, i + 1])),
     [order],
   );
+  const priorityWeights = useMemo(
+    () => rankOrderCentroidWeights(order.length),
+    [order.length],
+  );
+  const weightsById = useMemo(
+    () => Object.fromEntries(order.map((id, i) => [id, priorityWeights[i]])),
+    [order, priorityWeights],
+  );
   const weighted = useMemo(() => {
-    const n = order.length,
-      d = (n * (n + 1)) / 2;
     return cities
       .map((city) => ({
         ...city,
         score: categories.reduce(
           (sum, cat) =>
-            sum + (cat.values[city.id].score * (n - ranks[cat.id] + 1)) / d,
+            sum + cat.values[city.id].score * weightsById[cat.id],
           0,
         ),
       }))
       .sort((a, b) => b.score - a.score);
-  }, [ranks, order.length]);
+  }, [weightsById]);
   const candidates = weighted.filter((c) => c.candidate),
     benchmark = weighted.find((c) => !c.candidate)!,
     cat = categories.find((c) => c.id === selected)!;
+  const winnerDrivers = [...categories]
+    .sort(
+      (a, b) =>
+        b.values[candidates[0].id].score * weightsById[b.id] -
+        a.values[candidates[0].id].score * weightsById[a.id],
+    )
+    .slice(0, 3);
   const move = (id: string, dir: -1 | 1) =>
     setOrder((now) => {
       const a = [...now],
@@ -65,6 +89,16 @@ export default function Home() {
       a.splice(Math.max(0, Math.min(a.length, rank - 1)), 0, id);
       return a;
     });
+  const dropBefore = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) return;
+    setOrder((now) => {
+      const next = now.filter((id) => id !== draggedId);
+      next.splice(next.indexOf(targetId), 0, draggedId);
+      return next;
+    });
+    setDraggedId(null);
+    setDragOverId(null);
+  };
   return (
     <main>
       <header className="hero">
@@ -123,10 +157,10 @@ export default function Home() {
               </div>
               <p className="section-copy">
                 Asigna 1 a lo más importante. El score se recalcula con pesos
-                lineales y mantiene visible la incertidumbre.
+                de prioridad y mantiene visible la incertidumbre.
               </p>
             </div>
-            <div className="kpi-grid">
+            <div className="kpi-grid" aria-live="polite">
               <div className="kpi-card gradient-card">
                 <span>🏆 Destino líder</span>
                 <strong>{candidates[0].name}</strong>
@@ -197,9 +231,9 @@ export default function Home() {
                 <p className="eyebrow">LECTURA ANALÍTICA</p>
                 <h3>{candidates[0].name} lidera por equilibrio</h3>
                 <p>
-                  Con estas prioridades, su ventaja viene de agua, seguridad,
-                  salud e integración. Calgary maximiza poder de compra; Halifax
-                  y Moncton ganan peso cuando crisis y naturaleza suben.
+                  Con tus prioridades actuales, sus mayores aportes ponderados
+                  vienen de {winnerDrivers.map((driver) => driver.short).join(", ")}.
+                  El ranking considera simultáneamente las 16 categorías.
                 </p>
                 <div className="confidence">
                   <span>Confianza global</span>
@@ -226,11 +260,56 @@ export default function Home() {
                   ↺ Restablecer prioridades
                 </button>
               </div>
+              <div className="weight-summary" aria-live="polite">
+                <div>
+                  <span>🏆 Mejor opción con este orden</span>
+                  <strong>{candidates[0].name}</strong>
+                  <b>{candidates[0].score.toFixed(1)}/100</b>
+                </div>
+                <p>
+                  Pesos Rank-Order Centroid: prioridad 1 = {(
+                    priorityWeights[0] * 100
+                  ).toFixed(1)}%, prioridad 2 = {(
+                    priorityWeights[1] * 100
+                  ).toFixed(1)}% y prioridad 3 = {(
+                    priorityWeights[2] * 100
+                  ).toFixed(1)}%. Todas las categorías suman 100%.
+                </p>
+              </div>
               <div className="weights-list">
                 {order.map((id, i) => {
                   const c = categories.find((x) => x.id === id)!;
                   return (
-                    <div className="weight-row" key={id}>
+                    <div
+                      className={`weight-row${draggedId === id ? " dragging" : ""}${dragOverId === id ? " drag-over" : ""}`}
+                      key={id}
+                      onDragOver={(event) => {
+                        event.preventDefault();
+                        setDragOverId(id);
+                      }}
+                      onDragLeave={() => setDragOverId(null)}
+                      onDrop={(event) => {
+                        event.preventDefault();
+                        dropBefore(id);
+                      }}
+                    >
+                      <button
+                        className="drag-handle"
+                        draggable
+                        aria-label={`Arrastrar ${c.name}`}
+                        title="Mantén y arrastra para cambiar la prioridad"
+                        onDragStart={(event) => {
+                          setDraggedId(id);
+                          event.dataTransfer.effectAllowed = "move";
+                          event.dataTransfer.setData("text/plain", id);
+                        }}
+                        onDragEnd={() => {
+                          setDraggedId(null);
+                          setDragOverId(null);
+                        }}
+                      >
+                        ⠿
+                      </button>
                       <select
                         aria-label={`Prioridad de ${c.name}`}
                         value={i + 1}
@@ -253,18 +332,19 @@ export default function Home() {
                         <strong>{c.name}</strong>
                       </button>
                       <div className="weight-value">
-                        {(
-                          ((order.length - i) /
-                            ((order.length * (order.length + 1)) / 2)) *
-                          100
-                        ).toFixed(1)}
+                        {(priorityWeights[i] * 100).toFixed(1)}
                         %
                       </div>
                       <div className="arrows">
-                        <button disabled={i === 0} onClick={() => move(id, -1)}>
+                        <button
+                          aria-label={`Subir ${c.name}`}
+                          disabled={i === 0}
+                          onClick={() => move(id, -1)}
+                        >
                           ↑
                         </button>
                         <button
+                          aria-label={`Bajar ${c.name}`}
                           disabled={i === order.length - 1}
                           onClick={() => move(id, 1)}
                         >
@@ -429,8 +509,8 @@ export default function Home() {
                 baja la confianza.
               </li>
               <li>
-                Las prioridades 1–16 se convierten en pesos lineales: el primer
-                lugar pesa 16 veces el último.
+                Las prioridades 1–16 se convierten con Rank-Order Centroid: cada
+                posición recibe el promedio de los pesos recíprocos restantes.
               </li>
               <li>
                 Todo cambio de año, definición o fuente exige nueva versión del
