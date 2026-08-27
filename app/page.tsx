@@ -67,6 +67,14 @@ export default function Home() {
   const candidates = weighted.filter((c) => c.candidate),
     benchmark = weighted.find((c) => !c.candidate)!,
     cat = categories.find((c) => c.id === selected)!;
+  const highEvidenceShare = categories.reduce(
+    (sum, category) =>
+      sum +
+      (category.values[candidates[0].id].confidence === "Alta"
+        ? weightsById[category.id]
+        : 0),
+    0,
+  );
   const winnerDrivers = [...categories]
     .sort(
       (a, b) =>
@@ -89,11 +97,12 @@ export default function Home() {
       a.splice(Math.max(0, Math.min(a.length, rank - 1)), 0, id);
       return a;
     });
-  const dropBefore = (targetId: string) => {
+  const dropAt = (targetId: string, after: boolean) => {
     if (!draggedId || draggedId === targetId) return;
     setOrder((now) => {
       const next = now.filter((id) => id !== draggedId);
-      next.splice(next.indexOf(targetId), 0, draggedId);
+      const targetIndex = next.indexOf(targetId);
+      next.splice(targetIndex + (after ? 1 : 0), 0, draggedId);
       return next;
     });
     setDraggedId(null);
@@ -236,12 +245,13 @@ export default function Home() {
                   El ranking considera simultáneamente las 16 categorías.
                 </p>
                 <div className="confidence">
-                  <span>Confianza global</span>
-                  <strong>76%</strong>
+                  <span>Peso con evidencia Alta</span>
+                  <strong>{(highEvidenceShare * 100).toFixed(0)}%</strong>
                 </div>
                 <small>
-                  La principal limitación es la mezcla de datos CMA,
-                  provinciales y proxies ocupacionales.
+                  Es la proporción ponderada respaldada por fichas calificadas
+                  Alta; no es una probabilidad. El resto usa datos provinciales
+                  o proxies regionales.
                 </small>
               </aside>
             </div>
@@ -290,7 +300,8 @@ export default function Home() {
                       onDragLeave={() => setDragOverId(null)}
                       onDrop={(event) => {
                         event.preventDefault();
-                        dropBefore(id);
+                        const box=event.currentTarget.getBoundingClientRect();
+                        dropAt(id,event.clientY>box.top+box.height/2);
                       }}
                     >
                       <button

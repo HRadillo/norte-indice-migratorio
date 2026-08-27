@@ -1,6 +1,6 @@
 # Metodología — Índice de Resiliencia para Migrar
 
-**Versión:** 0.3.0
+**Versión:** 0.3.1
 **Corte:** 27 de agosto de 2026
 
 Compara Ottawa, Calgary, Kitchener–Waterloo, Halifax, Moncton–Dieppe, Toronto, Vancouver, Montréal, Québec City, Victoria y Winnipeg. Guadalajara es benchmark de origen y no participa en el ranking canadiense. Es apoyo a la decisión, no un índice oficial ni una probabilidad estadística.
@@ -25,6 +25,8 @@ El usuario asigna rangos únicos 1–16. Se convierten en pesos **Rank-Order Cen
 - **Baja:** definición transfronteriza imperfecta, dato antiguo o evidencia incompleta.
 
 COVID integra caída del PIB, recuperación, empleo y presión sanitaria. Seguridad usa CSI en Canadá; Guadalajara usa victimización/percepción y queda marcada como no equivalente. Salud, energía, alimentación, educación y movilidad social dependen parcialmente de proxies provinciales.
+
+En seguridad canadiense, las notas se calculan directamente desde el CSI y la tasa policial de 2025 mediante la fórmula publicada. Guadalajara conserva una nota separada porque ENSU no mide la misma variable y no debe tratarse como equivalencia estadística.
 
 En vivienda, CMHC publica renta de rotación de dos recámaras para algunos mercados y renta promedio para otros. La aplicación etiqueta cada medida y asigna confianza Media cuando no son idénticas. Nunca debe interpretarse una diferencia pequeña entre esos casos como precisión estadística.
 

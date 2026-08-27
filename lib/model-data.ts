@@ -67,6 +67,11 @@ export const sources:Source[]=[
 ];
 
 const v=(score:number,confidence:Confidence,facts:string[],geography?:string)=>({score,confidence,facts,geography});
+const clamp=(value:number)=>Math.max(0,Math.min(100,value));
+const securityScore=(csi:number,rate:number)=>Math.round(
+  .7*clamp(100*(130-csi)/(130-40))+
+  .3*clamp(100*(9000-rate)/(9000-3000))
+);
 export const categories:Category[]=[
   {id:"economy",short:"Economía",name:"Empleo e ingresos",rank:3,description:"Mercado laboral, ingreso disponible y estabilidad del empleo.",benchmark:"Canadá: desempleo CMA e ingreso mediano nacional como punto 50.",normalization:"55% desempleo (0=12%, 100=3%) y 45% ingreso mediano después de impuestos (0=CAD 55k, 100=CAD 95k).",sourceIds:["labour26","census21"],values:{
     ottawa:v(90,"Alta",["Ingreso familiar mediano después de impuestos: CAD 84,000 (2020)","Mercado diversificado y amortiguado por empleo público"],"CMA / parte Ontario"),calgary:v(87,"Alta",["Ingreso familiar mediano después de impuestos: ~CAD 85,000 (2020)","Mayor sensibilidad cíclica a energía"],"CMA"),waterloo:v(79,"Alta",["Ingreso familiar mediano después de impuestos: CAD 81,000 (2020)","Base tecnológica y manufacturera"],"CMA"),halifax:v(70,"Alta",["Desempleo: 5.7% en julio de 2026","Ingreso por debajo de grandes CMA"],"CMA / provincia"),moncton:v(66,"Media",["Mercado pequeño; recuperación pospandemia fuerte","Menor ingreso nominal"],"CMA / región"),guadalajara:v(53,"Media",["Desempleo urbano: 1.5% en 2026-T1","Informalidad y menor ingreso limitan comparabilidad"],"Ciudad / Jalisco")}},
@@ -79,7 +84,7 @@ export const categories:Category[]=[
   {id:"marketing",short:"Marketing",name:"Marketing y enseñanza de idiomas",rank:8,description:"Oportunidad conjunta para marketing/PR y docencia de idiomas sin licencia escolar.",benchmark:"Promedio de outlooks NOC 11202 y 41210; escala ordinal 20–100.",normalization:"Media de ambos outlooks; ajuste por tamaño de mercado y exigencia de credenciales.",sourceIds:["jobs"],values:{
     ottawa:v(66,"Alta",["Marketing/PR: Limited; instructores: Limited","Bilingüismo eleva encaje"],"CMA"),calgary:v(72,"Alta",["Mercado corporativo amplio","Instructores: Moderate"],"CMA"),waterloo:v(60,"Media",["Marketing/PR: Limited","Demanda tecnológica, competencia elevada"],"Región"),halifax:v(65,"Alta",["Marketing/PR: Moderate","Idiomas: salario mediano CAD 37.60/h"],"CMA"),moncton:v(68,"Media",["Marketing/PR: Moderate","Ventaja bilingüe; mercado pequeño"],"Región"),guadalajara:v(64,"Baja",["Mercado amplio, menor salario y formalidad","Benchmark de encaje"],"Área metropolitana")}},
   {id:"security",short:"Seguridad",name:"Crimen grave y cotidiano",rank:2,description:"Severidad del crimen y frecuencia reportada, separando percepción de victimización.",benchmark:"Canadá 2025: CSI 75.0 y tasa 5,585 por 100 mil.",normalization:"70% CSI inverso (100≤40; 0≥130) y 30% tasa inversa (100≤3,000; 0≥9,000).",sourceIds:["crime25","gdlcrime"],values:{
-    ottawa:v(89,"Alta",["CSI 50.6; tasa 4,212/100 mil","CSI cayó 6%"],"Parte Ontario CMA"),calgary:v(81,"Alta",["CSI 61.7; tasa 5,038/100 mil","CSI cayó 3%"],"CMA"),waterloo:v(75,"Alta",["CSI 66.8; tasa 5,083/100 mil","CSI cayó 9%"],"CMA"),halifax:v(71,"Alta",["CSI 68.6; tasa 6,094/100 mil","Más delito frecuente que Canadá"],"CMA"),moncton:v(39,"Alta",["CSI 105.6; tasa 7,561/100 mil","CSI subió 11%"],"CMA"),guadalajara:v(24,"Media",["64.7% percibía insegura la ciudad","Hogares: robo 19.6%; extorsión 17.2%"],"AMG; definición no comparable")}},
+    ottawa:v(securityScore(50.6,4212),"Alta",["CSI 50.6; tasa 4,212/100 mil","CSI cayó 6%"],"Parte Ontario CMA"),calgary:v(securityScore(61.7,5038),"Alta",["CSI 61.7; tasa 5,038/100 mil","CSI cayó 3%"],"CMA"),waterloo:v(securityScore(66.8,5083),"Alta",["CSI 66.8; tasa 5,083/100 mil","CSI cayó 9%"],"CMA"),halifax:v(securityScore(68.6,6094),"Alta",["CSI 68.6; tasa 6,094/100 mil","Más delito frecuente que Canadá"],"CMA"),moncton:v(securityScore(105.6,7561),"Alta",["CSI 105.6; tasa 7,561/100 mil","CSI subió 11%"],"CMA"),guadalajara:v(24,"Media",["64.7% percibía insegura la ciudad","Hogares: robo 19.6%; extorsión 17.2%"],"AMG; definición no comparable")}},
   {id:"health",short:"Salud",name:"Acceso y capacidad sanitaria",rank:6,description:"Proveedor regular, necesidades no atendidas y dificultad para recién llegados.",benchmark:"Canadá: 88.8% de menores con proveedor; 9.2% con necesidad no atendida.",normalization:"60% proveedor regular y 40% necesidad no atendida; proxy provincial con ajuste newcomer.",sourceIds:["health24","unmet22"],values:{
     ottawa:v(81,"Media",["Ontario: 87.6% de adultos con proveedor","Necesidad no atendida 8.5%; newcomers 75.2%"],"Provincia"),calgary:v(74,"Media",["Alberta: 85.4% con proveedor","No atendida 9.4%; newcomers Prairies 78.7%"],"Provincia / región"),waterloo:v(78,"Media",["Indicadores provinciales de Ontario","Capacidad local puede diferir"],"Provincia"),halifax:v(57,"Media",["Nova Scotia: 79.2% con proveedor","No atendida 13.7%; newcomers Atlantic 41%"],"Provincia / región"),moncton:v(53,"Media",["New Brunswick: no atendida 12.1%","Newcomers Atlantic con proveedor 41%"],"Provincia / región"),guadalajara:v(47,"Baja",["Afiliación a salud: 70.1% (2020)","No equivale a proveedor regular"],"Municipio")}},
   {id:"education",short:"Educación",name:"Educación y movilidad social",rank:9,description:"Resultados educativos, capital humano y movilidad intergeneracional.",benchmark:"Canadá PIAAC alfabetización 271; PISA y movilidad usan referencia nacional.",normalization:"45% PIAAC, 35% PISA, 20% movilidad intergeneracional; 50≈Canadá.",sourceIds:["piaac22","pisa22","mobility","gdlcensus"],values:{
@@ -145,12 +150,12 @@ const expansionValues:Record<string,Record<NewCityId,CategoryValue>>={
     winnipeg:v(64,"Media",["Mercado regional diversificado","Escala menor que Toronto, Vancouver y Montréal"],"CMA / provincia")
   },
   security:{
-    toronto:v(86,"Alta",["CSI 55.0 en 2025","Tasa reportada: 3,950 por 100 mil"],"CMA"),
-    vancouver:v(68,"Alta",["CSI 83.5 en 2025","Tasa reportada: 5,672 por 100 mil"],"CMA"),
-    montreal:v(86,"Alta",["CSI 61.3 en 2025","Tasa reportada: 3,641 por 100 mil"],"CMA"),
-    quebec:v(95,"Alta",["CSI 55.0 en 2025","Tasa reportada: 3,493 por 100 mil"],"CMA"),
-    victoria:v(75,"Alta",["CSI 74.6 en 2025","Tasa reportada: 5,588 por 100 mil"],"CMA"),
-    winnipeg:v(30,"Alta",["CSI 113.4 en 2025","Tasa reportada: 7,899 por 100 mil"],"CMA")
+    toronto:v(securityScore(55,3950),"Alta",["CSI 55.0 en 2025","Tasa reportada: 3,950 por 100 mil"],"CMA"),
+    vancouver:v(securityScore(83.5,5672),"Alta",["CSI 83.5 en 2025","Tasa reportada: 5,672 por 100 mil"],"CMA"),
+    montreal:v(securityScore(61.3,3641),"Alta",["CSI 61.3 en 2025","Tasa reportada: 3,641 por 100 mil"],"CMA"),
+    quebec:v(securityScore(55,3493),"Alta",["CSI 55.0 en 2025","Tasa reportada: 3,493 por 100 mil"],"CMA"),
+    victoria:v(securityScore(74.6,5588),"Alta",["CSI 74.6 en 2025","Tasa reportada: 5,588 por 100 mil"],"CMA"),
+    winnipeg:v(securityScore(113.4,7899),"Alta",["CSI 113.4 en 2025","Tasa reportada: 7,899 por 100 mil"],"CMA")
   },
   health:{
     toronto:v(81,"Media",["Ontario: necesidad no atendida 8.5%","Acceso a proveedor regular usa proxy provincial"],"Provincia; ajuste metropolitano"),
@@ -247,4 +252,4 @@ for(const category of categories){
   if(sourceAdditions[category.id]) category.sourceIds.push(...sourceAdditions[category.id]);
 }
 
-export const modelMeta={version:"0.3.0",snapshot:"27 agosto 2026",title:"Índice de Resiliencia para Migrar",subtitle:"Once ciudades canadienses, con Guadalajara como punto de partida",caveat:"Modelo de apoyo a la decisión; no es un índice oficial ni una probabilidad estadística."};
+export const modelMeta={version:"0.3.1",snapshot:"27 agosto 2026",title:"Índice de Resiliencia para Migrar",subtitle:"Once ciudades canadienses, con Guadalajara como punto de partida",caveat:"Modelo de apoyo a la decisión; no es un índice oficial ni una probabilidad estadística."};
