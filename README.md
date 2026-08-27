@@ -1,6 +1,6 @@
 # Norte — Índice de Resiliencia para Migrar
 
-Visualizador interactivo y auditable para comparar cinco destinos canadienses con Guadalajara como benchmark.
+Visualizador interactivo y auditable para comparar once destinos canadienses con Guadalajara como benchmark.
 
 **Sitio público:** [hradillo.github.io/norte-indice-migratorio](https://hradillo.github.io/norte-indice-migratorio/)
 

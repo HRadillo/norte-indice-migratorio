@@ -20,6 +20,10 @@ body,button,select,.hero h1,.hero-note p,.section-heading h2,.total-score,.confi
 /* Interactive priority model and dark-surface accessibility. */
 html{color-scheme:dark}
 button,select{color:inherit}
+.matrix{min-width:1480px}
+.matrix th:first-child,.matrix td:first-child{position:sticky;left:0;z-index:2;background:#151820;box-shadow:8px 0 14px #0005}
+.matrix th:first-child{z-index:3}
+.matrix tbody tr:hover td:first-child,.matrix tbody tr.selected td:first-child{background:#20242e}
 .cat-name{color:#f2f4f8;min-width:0;padding:8px 10px}
 .cat-name strong{color:#f2f4f8;line-height:1.25}
 .weight-summary{display:grid;grid-template-columns:minmax(260px,.7fr) 1.3fr;gap:18px;margin:-12px 0 26px}

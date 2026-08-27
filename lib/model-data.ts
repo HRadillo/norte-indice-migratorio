@@ -1,10 +1,11 @@
-export type CityId = "ottawa" | "calgary" | "waterloo" | "halifax" | "moncton" | "guadalajara";
+export type CityId = "ottawa" | "calgary" | "waterloo" | "halifax" | "moncton" | "toronto" | "vancouver" | "montreal" | "quebec" | "victoria" | "winnipeg" | "guadalajara";
+export type NewCityId = "toronto" | "vancouver" | "montreal" | "quebec" | "victoria" | "winnipeg";
 export type Confidence = "Alta" | "Media" | "Baja";
 
 export interface Source { id:string; publisher:string; title:string; year:string; url:string; tier:"Gobierno"|"Instituto público"|"Industria"|"Estudio" }
 export interface Category {
   id:string; short:string; name:string; description:string; rank:number; benchmark:string; normalization:string; sourceIds:string[];
-  values:Record<CityId,{score:number;confidence:Confidence;facts:string[];geography?:string}>;
+  values:Record<string,{score:number;confidence:Confidence;facts:string[];geography?:string}>;
 }
 
 export const cities:{id:CityId;name:string;province:string;candidate:boolean;color:string}[]=[
@@ -13,6 +14,12 @@ export const cities:{id:CityId;name:string;province:string;candidate:boolean;col
   {id:"waterloo",name:"Kitchener–Waterloo",province:"Ontario",candidate:true,color:"#2f7f73"},
   {id:"halifax",name:"Halifax",province:"Nova Scotia",candidate:true,color:"#735a93"},
   {id:"moncton",name:"Moncton–Dieppe",province:"New Brunswick",candidate:true,color:"#b38a24"},
+  {id:"toronto",name:"Toronto",province:"Ontario",candidate:true,color:"#4f8cff"},
+  {id:"vancouver",name:"Vancouver",province:"British Columbia",candidate:true,color:"#30c9a8"},
+  {id:"montreal",name:"Montréal",province:"Québec",candidate:true,color:"#ff5ea8"},
+  {id:"quebec",name:"Québec City",province:"Québec",candidate:true,color:"#7b6cff"},
+  {id:"victoria",name:"Victoria",province:"British Columbia",candidate:true,color:"#40bde8"},
+  {id:"winnipeg",name:"Winnipeg",province:"Manitoba",candidate:true,color:"#ef9d32"},
   {id:"guadalajara",name:"Guadalajara",province:"Jalisco · benchmark",candidate:false,color:"#a84d5b"},
 ];
 
@@ -44,6 +51,19 @@ export const sources:Source[]=[
   {id:"food",publisher:"Statistics Canada",title:"Farm cash receipts by province",year:"2025",tier:"Gobierno",url:"https://www150.statcan.gc.ca/n1/daily-quotidien/260226/t002c-eng.htm"},
   {id:"gdlcrime",publisher:"IIEG Jalisco / INEGI ENSU",title:"Seguridad pública urbana — Área Metropolitana de Guadalajara",year:"2025",tier:"Gobierno",url:"https://iieg.gob.mx/ns/wp-content/uploads/2026/01/ficha_encuesta_nacional_seguridad_publica_urbana_ensu_jalisco_dic2025.html"},
   {id:"gdlcensus",publisher:"INEGI",title:"Panorama sociodemográfico de Jalisco",year:"2020",tier:"Gobierno",url:"https://www.inegi.org.mx/contenidos/productos/prod_serv/contenidos/espanol/bvinegi/productos/nueva_estruc/702825197872.pdf"},
+  {id:"torwater",publisher:"City of Toronto",title:"Tap Water Quality and System Reports",year:"2025",tier:"Gobierno",url:"https://www.toronto.ca/services-payments/water-environment/tap-water-in-toronto/tap-water-quality-system-reports/"},
+  {id:"vanwater",publisher:"City of Vancouver",title:"Water Demand Management Strategy",year:"2025",tier:"Gobierno",url:"https://vancouver.ca/files/cov/water-demand-management-strategy-2025.pdf"},
+  {id:"mtlwater",publisher:"Ville de Montréal",title:"2025–2034 Montréal Water Strategy",year:"2026",tier:"Gobierno",url:"https://montreal.ca/en/articles/2025-2034-montreal-water-strategy-commitment-to-future-montreal-water-87939"},
+  {id:"qcwater",publisher:"Ville de Québec",title:"Gestion et quantité de l’eau potable",year:"2024–2026",tier:"Gobierno",url:"https://www.ville.quebec.qc.ca/apropos/planification-orientations/environnement/eau/gestion_eau/quantite.aspx"},
+  {id:"vicwater",publisher:"Capital Regional District",title:"Greater Victoria water supply and Sooke Lake Reservoir",year:"2026",tier:"Gobierno",url:"https://www.crd.ca/programs-services/water/greater-victorias-water-supply"},
+  {id:"winwater",publisher:"City of Winnipeg",title:"Shoal Lake and Winnipeg's drinking water",year:"2024–2026",tier:"Gobierno",url:"https://legacy.winnipeg.ca/waterandwaste/water/shoallake.stm"},
+  {id:"vanadapt",publisher:"City of Vancouver",title:"Climate Change Adaptation Strategy",year:"2024–2026",tier:"Gobierno",url:"https://vancouver.ca/green-vancouver/climate-change-adaptation-strategy.aspx"},
+  {id:"winadapt",publisher:"City of Winnipeg",title:"Climate resilience and Climate Action Plan update",year:"2026",tier:"Gobierno",url:"https://www.winnipeg.ca/services-programs/trees-environment/climate-action/climate-resilience"},
+  {id:"jobstor",publisher:"Government of Canada Job Bank",title:"Producers, directors, choreographers and related occupations — Toronto",year:"2025–2027",tier:"Gobierno",url:"https://www.nl.jobbank.gc.ca/marketreport/outlook-occupation/7911/geo9219"},
+  {id:"jobsvan",publisher:"Government of Canada Job Bank",title:"Producers and directors — Vancouver region",year:"2025–2027",tier:"Gobierno",url:"https://www.jobbank.gc.ca/marketreport/outlook-occupation/27218/39070"},
+  {id:"jobsmtl",publisher:"Government of Canada Job Bank",title:"Producers, directors and related occupations — Montréal",year:"2025–2027",tier:"Gobierno",url:"https://www.jobbank.gc.ca/outlookreport/occupation/5383"},
+  {id:"jobsqc",publisher:"Government of Canada Job Bank",title:"Producers, directors and related occupations — Québec regions",year:"2025–2027",tier:"Gobierno",url:"https://www.nl.jobbank.gc.ca/marketreport/outlook-occupation/7911/QC"},
+  {id:"jobswin",publisher:"Government of Canada Job Bank",title:"Film and video camera operators — Winnipeg",year:"2025–2027",tier:"Gobierno",url:"https://www.jobbank.gc.ca/outlookreport/occupation/5531"},
 ];
 
 const v=(score:number,confidence:Confidence,facts:string[],geography?:string)=>({score,confidence,facts,geography});
@@ -82,4 +102,149 @@ export const categories:Category[]=[
     ottawa:v(84,"Media",["Ontario: red baja en carbono e interconectada","Agricultura provincial CAD 23.49bn"],"Provincia"),calgary:v(73,"Media",["Gran base energética, red más fósil","Agricultura CAD 24.45bn"],"Provincia"),waterloo:v(85,"Media",["Fortaleza eléctrica de Ontario","Cercanía a gran base agrícola"],"Provincia"),halifax:v(66,"Media",["Red más aislada y fósil","Agricultura CAD 826m"],"Provincia"),moncton:v(75,"Media",["NB: nuclear 40%, fósil 27%, hidro 23%","Agricultura CAD 1.326bn"],"Provincia"),guadalajara:v(54,"Baja",["Jalisco es potencia agroalimentaria","Agua y calor concentran riesgo"],"Estado")}},
 ];
 
-export const modelMeta={version:"0.2.0",snapshot:"27 agosto 2026",title:"Índice de Resiliencia para Migrar",subtitle:"Cinco ciudades canadienses, con Guadalajara como punto de partida",caveat:"Modelo de apoyo a la decisión; no es un índice oficial ni una probabilidad estadística."};
+type CategoryValue={score:number;confidence:Confidence;facts:string[];geography?:string};
+const expansionValues:Record<string,Record<NewCityId,CategoryValue>>={
+  economy:{
+    toronto:v(80,"Alta",["Desempleo CMA: 6.7% (julio de 2026)","Ingreso familiar mediano después de impuestos: CAD 85,000 (2020)"],"CMA"),
+    vancouver:v(75,"Alta",["Desempleo CMA: 6.0% (julio de 2026)","Ingreso familiar mediano después de impuestos: CAD 79,500 (2020)"],"CMA"),
+    montreal:v(70,"Alta",["Desempleo CMA: 6.6% (julio de 2026)","Ingreso familiar mediano después de impuestos: CAD 65,500 (2020)"],"CMA"),
+    quebec:v(82,"Media",["Desempleo CMA: ~4.0% en el trimestre móvil de 2026","Ingreso familiar mediano después de impuestos: CAD 65,500 (2020)"],"CMA; desempleo trimestral"),
+    victoria:v(76,"Media",["Desempleo CMA: ~4.6% en el trimestre móvil de 2026","Ingreso familiar mediano después de impuestos: CAD 75,500 (2020)"],"CMA; desempleo trimestral"),
+    winnipeg:v(75,"Media",["Desempleo CMA: ~5.6% en el trimestre móvil de 2026","Ingreso familiar mediano después de impuestos: CAD 71,500 (2020)"],"CMA; desempleo trimestral")
+  },
+  housing:{
+    toronto:v(42,"Alta",["Renta de rotación 2 recámaras: CAD 2,547/mes (2025)","Vacancia purpose-built: 3.0%"],"CMA"),
+    vancouver:v(28,"Alta",["Renta de rotación 2 recámaras: CAD 2,696/mes (2025)","Vacancia purpose-built: 3.7%"],"CMA"),
+    montreal:v(78,"Alta",["Renta de rotación 2 recámaras: CAD 1,644/mes (2025)","Vacancia purpose-built: 2.9%"],"CMA"),
+    quebec:v(92,"Media",["Renta promedio 2 recámaras: CAD 1,277/mes (2025)","Vacancia purpose-built: 2.4%; renta promedio, no de rotación"],"CMA; medida de renta no idéntica"),
+    victoria:v(50,"Media",["Renta promedio 2 recámaras: CAD 2,120/mes (2025)","Vacancia purpose-built: 3.3%; renta promedio, no de rotación"],"CMA; medida de renta no idéntica"),
+    winnipeg:v(88,"Media",["Renta promedio 2 recámaras: CAD 1,571/mes (2025)","Vacancia purpose-built: 2.8%; renta promedio, no de rotación"],"CMA; medida de renta no idéntica")
+  },
+  purchasing:{
+    toronto:v(55,"Media",["Ingreso mediano alto frente a Canadá","La renta de rotación absorbe cerca de 36% del ingreso mediano familiar bruto equivalente"],"CMA; cálculo renta/ingreso"),
+    vancouver:v(38,"Media",["Renta de rotación más alta del grupo ampliado","Ingreso mediano inferior al de Toronto y Ottawa"],"CMA; cálculo renta/ingreso"),
+    montreal:v(70,"Media",["Renta de rotación 36% menor que Toronto","Ingreso mediano también menor; la ventaja neta persiste"],"CMA; cálculo renta/ingreso"),
+    quebec:v(86,"Media",["Renta promedio baja frente al ingreso mediano","Desempleo reducido sostiene la holgura, con cautela por definición de renta"],"CMA; medida mixta"),
+    victoria:v(55,"Media",["Ingreso mediano CAD 75,500","Renta promedio 2 recámaras CAD 2,120 limita la holgura"],"CMA; medida mixta"),
+    winnipeg:v(80,"Media",["Ingreso mediano CAD 71,500","Renta promedio 2 recámaras CAD 1,571 favorece la holgura"],"CMA; medida mixta")
+  },
+  video:{
+    toronto:v(88,"Alta",["Productores/directores NOC 51120: ~11,270 ocupados","Outlook 2025–2027: Limited; gran masa crítica compensa parcialmente"],"Región de Toronto"),
+    vancouver:v(86,"Media",["Mercado de productores se proyecta balanceado","AV technicians: ~1,830; outlook Very limited"],"Región de Vancouver"),
+    montreal:v(83,"Alta",["Productores/directores: ~7,830 ocupados; outlook Limited","AV technicians: ~8,350; outlook Very limited"],"Región de Montréal"),
+    quebec:v(60,"Alta",["Productores/directores: outlook Moderate","Mercado regional menor que Montréal"],"Capitale-Nationale"),
+    victoria:v(52,"Baja",["Mercado audiovisual local de escala pequeña","Acceso indirecto al ecosistema de British Columbia"],"CMA / provincia"),
+    winnipeg:v(48,"Media",["Camera operators: ~150 ocupados","Outlook 2025–2027: Limited"],"Región de Winnipeg")
+  },
+  marketing:{
+    toronto:v(82,"Media",["Mayor profundidad corporativa del grupo","Competencia elevada en marketing y docencia de idiomas"],"CMA / provincia"),
+    vancouver:v(82,"Media",["Mercado grande y diverso","Demanda de idiomas amplia; vivienda reduce atractivo neto"],"CMA / provincia"),
+    montreal:v(78,"Media",["Mercado grande y bilingüe","Francés es requisito frecuente y ventaja para docencia"],"CMA / provincia"),
+    quebec:v(72,"Media",["Bilingüismo aporta encaje en idiomas","Mercado de marketing menor y predominantemente francófono"],"CMA / provincia"),
+    victoria:v(60,"Media",["Mercado de servicios y gobierno provincial","Menor masa crítica que Vancouver"],"CMA / provincia"),
+    winnipeg:v(64,"Media",["Mercado regional diversificado","Escala menor que Toronto, Vancouver y Montréal"],"CMA / provincia")
+  },
+  security:{
+    toronto:v(86,"Alta",["CSI 55.0 en 2025","Tasa reportada: 3,950 por 100 mil"],"CMA"),
+    vancouver:v(68,"Alta",["CSI 83.5 en 2025","Tasa reportada: 5,672 por 100 mil"],"CMA"),
+    montreal:v(86,"Alta",["CSI 61.3 en 2025","Tasa reportada: 3,641 por 100 mil"],"CMA"),
+    quebec:v(95,"Alta",["CSI 55.0 en 2025","Tasa reportada: 3,493 por 100 mil"],"CMA"),
+    victoria:v(75,"Alta",["CSI 74.6 en 2025","Tasa reportada: 5,588 por 100 mil"],"CMA"),
+    winnipeg:v(30,"Alta",["CSI 113.4 en 2025","Tasa reportada: 7,899 por 100 mil"],"CMA")
+  },
+  health:{
+    toronto:v(81,"Media",["Ontario: necesidad no atendida 8.5%","Acceso a proveedor regular usa proxy provincial"],"Provincia; ajuste metropolitano"),
+    vancouver:v(65,"Media",["British Columbia: necesidad no atendida 10.9%","Capacidad especializada alta, acceso primario tensionado"],"Provincia; ajuste metropolitano"),
+    montreal:v(76,"Media",["Québec: necesidad no atendida 8.7%","Acceso a proveedor regular usa proxy provincial"],"Provincia; ajuste metropolitano"),
+    quebec:v(76,"Media",["Québec: necesidad no atendida 8.7%","Indicador comparable disponible a nivel provincial"],"Provincia"),
+    victoria:v(65,"Media",["British Columbia: necesidad no atendida 10.9%","Indicador comparable disponible a nivel provincial"],"Provincia"),
+    winnipeg:v(80,"Media",["Manitoba: necesidad no atendida 7.7%","Indicador comparable disponible a nivel provincial"],"Provincia")
+  },
+  education:{
+    toronto:v(85,"Media",["Ontario PIAAC alfabetización: 269","Ontario se ubica alrededor del promedio canadiense en PISA"],"Provincia / CMA"),
+    vancouver:v(92,"Media",["British Columbia PIAAC: 281","BC se ubica alrededor del promedio canadiense en PISA"],"Provincia / CMA"),
+    montreal:v(88,"Media",["Québec PIAAC: 267","Québec superó el promedio canadiense en PISA 2022"],"Provincia / CMA"),
+    quebec:v(86,"Media",["Québec PIAAC: 267","Québec superó el promedio canadiense en PISA 2022"],"Provincia / CMA"),
+    victoria:v(88,"Media",["British Columbia PIAAC: 281","Resultados PISA provinciales sólidos"],"Provincia / CMA"),
+    winnipeg:v(76,"Media",["Manitoba PIAAC: 269","PISA provincial generalmente por debajo del promedio canadiense"],"Provincia / CMA")
+  },
+  water:{
+    toronto:v(88,"Alta",["Lake Ontario abastece el sistema municipal","Toronto trata cerca de 435 mil millones de litros al año y reporta cumplimiento sostenido"],"Municipal"),
+    vancouver:v(65,"Alta",["Agua de alta calidad históricamente abundante","Crecimiento y sequía estacional presionan el suministro en verano"],"Municipal / regional"),
+    montreal:v(89,"Alta",["Estrategia hídrica 2025–2034 con 16 objetivos","Red abundante; lluvia extrema e infraestructura envejecida concentran el riesgo"],"Municipal"),
+    quebec:v(82,"Alta",["Consumo bajó ~18% entre 2006 y 2024","Población creció ~16% en el mismo periodo; persiste presión de picos y fuentes"],"Municipal"),
+    victoria:v(69,"Alta",["Sooke Lake aporta cerca de 90% del almacenamiento","Sistema depende de lluvia invernal almacenada para los veranos secos"],"Regional"),
+    winnipeg:v(78,"Alta",["Shoal Lake es la fuente principal, conectada por acueducto por gravedad","Fuente grande y protegida, pero concentrada en un solo sistema distante"],"Municipal / regional")
+  },
+  climate:{
+    toronto:v(72,"Alta",["Invierno frío pero menos severo que Ottawa o Winnipeg","Verano cálido y húmedo; efecto de Lake Ontario"],"Estación representativa"),
+    vancouver:v(88,"Alta",["Invierno más templado entre las grandes ciudades canadienses","Verano seco; temporada húmeda y gris prolongada"],"Estación representativa"),
+    montreal:v(60,"Alta",["Invierno frío y nevado","Verano cálido y húmedo con alta amplitud estacional"],"Estación representativa"),
+    quebec:v(55,"Alta",["Invierno largo, frío y nevado","Verano moderadamente cálido y húmedo"],"Estación representativa"),
+    victoria:v(94,"Alta",["Invierno suave para estándares canadienses","Verano seco y templado; menor carga térmica anual"],"Estación representativa"),
+    winnipeg:v(42,"Alta",["Invierno muy frío y ventoso","Verano cálido; una de las mayores amplitudes estacionales"],"Estación representativa")
+  },
+  risk:{
+    toronto:v(55,"Media",["Inundación pluvial, calor y tormentas convectivas","Alta concentración de activos eleva pérdidas potenciales"],"Municipal / provincial"),
+    vancouver:v(42,"Alta",["Sismo, inundación, calor, humo y sequía","Adaptación municipal incluye lluvia extrema y aumento del nivel del mar"],"Municipal / regional"),
+    montreal:v(58,"Alta",["Lluvia extrema, inundación y calor urbano","La ciudad proyecta multiplicación del riesgo por lluvias intensas"],"Municipal"),
+    quebec:v(70,"Media",["Inundación, hielo y erosión fluvial","Menor concentración de pérdidas que Montréal o Toronto"],"Municipal / provincial"),
+    victoria:v(52,"Media",["Sismo y aumento del nivel del mar son riesgos estructurales","Incendio, humo y sequía estival presionan la región"],"Regional / provincial"),
+    winnipeg:v(50,"Alta",["Inundación, calor extremo, sequía y lluvia intensa","Plan local también identifica ciclos de congelamiento y deshielo"],"Municipal / regional")
+  },
+  crisis:{
+    toronto:v(76,"Media",["Ontario PIB real 2020: −5.0%","Índice PIB 2021: 100.3 respecto a 2019=100"],"Provincia / CMA"),
+    vancouver:v(84,"Media",["British Columbia PIB real 2020: −3.8%","Índice PIB 2021: 103.0 respecto a 2019=100"],"Provincia / CMA"),
+    montreal:v(82,"Media",["Québec PIB real 2020: −5.3%","Índice PIB 2021: 100.7 respecto a 2019=100"],"Provincia / CMA"),
+    quebec:v(84,"Media",["Québec PIB real 2020: −5.3%","Recuperación provincial superó el nivel de 2019 en 2021"],"Provincia / CMA"),
+    victoria:v(84,"Media",["British Columbia PIB real 2020: −3.8%","Índice PIB 2021: 103.0 respecto a 2019=100"],"Provincia / CMA"),
+    winnipeg:v(72,"Media",["Manitoba PIB real 2020: −4.8%","Índice PIB 2021: 97.2 respecto a 2019=100"],"Provincia / CMA")
+  },
+  transport:{
+    toronto:v(95,"Alta",["Red regional de metro, tranvía, buses y tren GO","Alta densidad central y mayor viabilidad sin auto"],"CMA"),
+    vancouver:v(91,"Alta",["SkyTrain, buses y SeaBus forman red metropolitana","Alta proporción de viajes activos y colectivos"],"CMA"),
+    montreal:v(93,"Alta",["Metro, buses y tren regional sostienen vida sin auto","Forma urbana densa; expansión REM"],"CMA"),
+    quebec:v(60,"Media",["Red de buses estructurada","Menor densidad y mayor dependencia del auto fuera del centro"],"CMA"),
+    victoria:v(72,"Media",["Alta caminabilidad y ciclismo en el núcleo","Sin tren urbano; buses y ferries conectan la región"],"CMA"),
+    winnipeg:v(58,"Media",["Red de buses y corredor rápido","Expansión baja y clima elevan dependencia del auto"],"CMA")
+  },
+  integration:{
+    toronto:v(97,"Alta",["Inmigrantes: 46.6% de la población en 2021","Mayor masa crítica de comunidades migrantes del grupo"],"CMA"),
+    vancouver:v(98,"Alta",["Inmigrantes: 41.8% de la población en 2021","Amplia diversidad lingüística y redes de llegada"],"CMA"),
+    montreal:v(94,"Alta",["Inmigrantes: 24.3% de la población en 2021","Ecosistema bilingüe amplio; francés es central"],"CMA"),
+    quebec:v(70,"Alta",["Inmigrantes: 6.7% de la población en 2021","Menor masa crítica; francés es esencial para integración"],"CMA"),
+    victoria:v(77,"Alta",["Inmigrantes: 18.9% de la población en 2021","Red más pequeña que Vancouver"],"CMA"),
+    winnipeg:v(80,"Alta",["Inmigrantes: 25.4% de la población en 2021","Diversidad alta para su escala metropolitana"],"CMA")
+  },
+  nature:{
+    toronto:v(70,"Media",["Sistema de ravines y costa de Lake Ontario","Acceso regional amplio, cobertura verde intraurbana desigual"],"CMA"),
+    vancouver:v(97,"Alta",["Costa, montañas y parques accesibles desde la ciudad","Verdor urbano y acceso recreativo regional excepcionales"],"CMA"),
+    montreal:v(77,"Media",["Mont Royal, río y red de parques","Acceso regional sólido, menor variedad inmediata que la costa del Pacífico"],"CMA"),
+    quebec:v(91,"Alta",["Río, bosques y parques regionales cercanos","Alta proximidad a naturaleza fuera del núcleo"],"CMA"),
+    victoria:v(99,"Alta",["Costa del Pacífico, bosque y parques regionales","Acceso cotidiano a naturaleza excepcional"],"CMA"),
+    winnipeg:v(74,"Media",["Ríos, parques y acceso lacustre regional","Cobertura verde estacional y menor variedad topográfica"],"CMA")
+  },
+  systems:{
+    toronto:v(84,"Media",["Ontario combina nuclear, hidro e interconexiones","Gran base agroalimentaria provincial y logística nacional"],"Provincia / CMA"),
+    vancouver:v(85,"Media",["British Columbia depende ampliamente de hidroelectricidad","Puerto y producción provincial diversifican abastecimiento"],"Provincia / CMA"),
+    montreal:v(92,"Media",["Québec tiene sistema eléctrico predominantemente hidroeléctrico","Base agroalimentaria provincial y gran nodo logístico"],"Provincia / CMA"),
+    quebec:v(92,"Media",["Québec tiene sistema eléctrico predominantemente hidroeléctrico","Proximidad a producción agroalimentaria provincial"],"Provincia / CMA"),
+    victoria:v(78,"Media",["Electricidad provincial baja en carbono","Dependencia insular y logística de ferries reducen redundancia alimentaria"],"Provincia / región"),
+    winnipeg:v(88,"Media",["Manitoba depende ampliamente de hidroelectricidad","Gran base agrícola y ubicación logística central"],"Provincia / CMA")
+  }
+};
+
+for(const category of categories){
+  Object.assign(category.values,expansionValues[category.id]);
+}
+
+const sourceAdditions:Record<string,string[]>={
+  water:["torwater","vanwater","mtlwater","qcwater","vicwater","winwater"],
+  risk:["vanadapt","mtlwater","winadapt"],
+  video:["jobstor","jobsvan","jobsmtl","jobsqc","jobswin"]
+};
+for(const category of categories){
+  if(sourceAdditions[category.id]) category.sourceIds.push(...sourceAdditions[category.id]);
+}
+
+export const modelMeta={version:"0.3.0",snapshot:"27 agosto 2026",title:"Índice de Resiliencia para Migrar",subtitle:"Once ciudades canadienses, con Guadalajara como punto de partida",caveat:"Modelo de apoyo a la decisión; no es un índice oficial ni una probabilidad estadística."};

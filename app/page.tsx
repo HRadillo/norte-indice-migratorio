@@ -188,7 +188,7 @@ export default function Home() {
               </div>
               <div className="kpi-card">
                 <span>Cobertura</span>
-                <strong>16 × 6</strong>
+                <strong>{categories.length} × {cities.length}</strong>
                 <small>categorías por lugares</small>
               </div>
             </div>

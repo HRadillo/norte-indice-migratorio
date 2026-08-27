@@ -11,7 +11,7 @@
     "build:pages": "GITHUB_PAGES=true next build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "validate:data": "node scripts/validate-data.mjs"
+    "validate:data": "node --experimental-strip-types scripts/validate-data.mjs"
   },
   "dependencies": {
     "next": "16.2.6",

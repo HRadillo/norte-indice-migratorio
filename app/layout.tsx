@@ -6,10 +6,10 @@ const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 export const metadata: Metadata = {
   metadataBase: new URL(isGitHubPages ? 'https://hradillo.github.io/norte-indice-migratorio/' : 'https://norte-indice-migratorio.hradillo7.chatgpt.site/'),
   title: 'Norte — Índice de Resiliencia para Migrar',
-  description: 'Comparador reponderable de cinco ciudades canadienses, con Guadalajara como benchmark.',
+  description: 'Comparador reponderable de once ciudades canadienses, con Guadalajara como benchmark.',
   openGraph: {
     title: 'Norte — Índice de Resiliencia para Migrar',
-    description: 'Cinco ciudades canadienses, Guadalajara como benchmark y 16 prioridades reordenables.',
+    description: 'Once ciudades canadienses, Guadalajara como benchmark y 16 prioridades reordenables.',
     images: ['norte-social-preview.png'],
   },
 };
