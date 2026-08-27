@@ -252,4 +252,4 @@ for(const category of categories){
   if(sourceAdditions[category.id]) category.sourceIds.push(...sourceAdditions[category.id]);
 }
 
-export const modelMeta={version:"0.3.1",snapshot:"27 agosto 2026",title:"Índice de Resiliencia para Migrar",subtitle:"Once ciudades canadienses, con Guadalajara como punto de partida",caveat:"Modelo de apoyo a la decisión; no es un índice oficial ni una probabilidad estadística."};
+export const modelMeta={version:"0.4.0",snapshot:"27 agosto 2026",title:"Índice de Resiliencia para Migrar",subtitle:"Once ciudades canadienses, con Guadalajara como punto de partida",caveat:"Modelo de apoyo a la decisión; no es un índice oficial ni una probabilidad estadística."};

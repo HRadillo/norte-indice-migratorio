@@ -1,6 +1,6 @@
 # Metodología — Índice de Resiliencia para Migrar
 
-**Versión:** 0.3.1
+**Versión:** 0.4.0
 **Corte:** 27 de agosto de 2026
 
 Compara Ottawa, Calgary, Kitchener–Waterloo, Halifax, Moncton–Dieppe, Toronto, Vancouver, Montréal, Québec City, Victoria y Winnipeg. Guadalajara es benchmark de origen y no participa en el ranking canadiense. Es apoyo a la decisión, no un índice oficial ni una probabilidad estadística.

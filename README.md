@@ -6,6 +6,9 @@ Visualizador interactivo y auditable para comparar once destinos canadienses con
 
 - 16 categorías cuantitativas.
 - Ranking en vivo al reordenar prioridades 1–16.
+- Mesa dividida con prioridades y ranking visibles simultáneamente.
+- Filtro para comparar únicamente las ciudades seleccionadas.
+- Ayudas contextuales para interpretar pesos, scores y confianza.
 - Fuente, año, geografía y confianza visibles.
 - Guadalajara no altera el ranking canadiense.
 - Método documentado en [METHODOLOGY.md](./METHODOLOGY.md).

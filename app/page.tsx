@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState } from "react";
+import React, { useLayoutEffect, useMemo, useRef, useState } from "react";
 import { categories, cities, modelMeta, sources } from "../lib/model-data";
 const initialOrder = [...categories]
   .sort((a, b) => a.rank - b.rank)
@@ -34,12 +34,58 @@ const rankOrderCentroidWeights = (count: number) =>
     return weight / count;
   });
 
+function HelpTip({label,children}:{label:string;children:React.ReactNode}) {
+  return (
+    <button type="button" className="help-tip" aria-label={label}>
+      ?
+      <span className="tip-bubble" role="tooltip">{children}</span>
+    </button>
+  );
+}
+
 export default function Home() {
   const [order, setOrder] = useState(initialOrder),
     [selected, setSelected] = useState("water"),
     [view, setView] = useState<"ranking" | "matrix" | "sources">("ranking"),
     [draggedId, setDraggedId] = useState<string | null>(null),
-    [dragOverId, setDragOverId] = useState<string | null>(null);
+    [dragOverId, setDragOverId] = useState<string | null>(null),
+    [visibleCityIds,setVisibleCityIds]=useState(
+      ()=>new Set(cities.filter(city=>city.candidate).map(city=>city.id)),
+    );
+  const rowRefs=useRef(new Map<string,HTMLDivElement>());
+  const previousPositions=useRef(new Map<string,number>());
+  const cityRowRefs=useRef(new Map<string,HTMLDivElement>());
+  const previousCityPositions=useRef(new Map<string,number>());
+  const activeDragId=useRef<string|null>(null);
+
+  useLayoutEffect(()=>{
+    if(!previousPositions.current.size) return;
+    const reduceMotion=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    rowRefs.current.forEach((element,id)=>{
+      const previousTop=previousPositions.current.get(id);
+      if(previousTop===undefined) return;
+      const delta=previousTop-element.getBoundingClientRect().top;
+      if(delta&&!reduceMotion){
+        element.animate(
+          [{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],
+          {duration:320,easing:"cubic-bezier(.22,1,.36,1)"},
+        );
+      }
+    });
+    cityRowRefs.current.forEach((element,id)=>{
+      const previousTop=previousCityPositions.current.get(id);
+      if(previousTop===undefined) return;
+      const delta=previousTop-element.getBoundingClientRect().top;
+      if(delta&&!reduceMotion){
+        element.animate(
+          [{transform:`translateY(${delta}px)`},{transform:"translateY(0)"}],
+          {duration:380,easing:"cubic-bezier(.22,1,.36,1)"},
+        );
+      }
+    });
+    previousPositions.current.clear();
+    previousCityPositions.current.clear();
+  },[order]);
   const ranks = useMemo(
     () => Object.fromEntries(order.map((id, i) => [id, i + 1])),
     [order],
@@ -64,9 +110,10 @@ export default function Home() {
       }))
       .sort((a, b) => b.score - a.score);
   }, [weightsById]);
-  const candidates = weighted.filter((c) => c.candidate),
+  const candidates = weighted.filter((c) => c.candidate&&visibleCityIds.has(c.id)),
     benchmark = weighted.find((c) => !c.candidate)!,
-    cat = categories.find((c) => c.id === selected)!;
+    cat = categories.find((c) => c.id === selected)!,
+    visibleCities=cities.filter(city=>!city.candidate||visibleCityIds.has(city.id));
   const highEvidenceShare = categories.reduce(
     (sum, category) =>
       sum +
@@ -82,8 +129,17 @@ export default function Home() {
         a.values[candidates[0].id].score * weightsById[a.id],
     )
     .slice(0, 3);
+  const updateOrder=(updater:(current:string[])=>string[])=>{
+    previousPositions.current=new Map(
+      [...rowRefs.current.entries()].map(([id,element])=>[id,element.getBoundingClientRect().top]),
+    );
+    previousCityPositions.current=new Map(
+      [...cityRowRefs.current.entries()].map(([id,element])=>[id,element.getBoundingClientRect().top]),
+    );
+    setOrder(updater);
+  };
   const move = (id: string, dir: -1 | 1) =>
-    setOrder((now) => {
+    updateOrder((now) => {
       const a = [...now],
         i = a.indexOf(id),
         j = i + dir;
@@ -92,21 +148,38 @@ export default function Home() {
       return a;
     });
   const setRank = (id: string, rank: number) =>
-    setOrder((now) => {
+    updateOrder((now) => {
       const a = now.filter((x) => x !== id);
       a.splice(Math.max(0, Math.min(a.length, rank - 1)), 0, id);
       return a;
     });
-  const dropAt = (targetId: string, after: boolean) => {
-    if (!draggedId || draggedId === targetId) return;
-    setOrder((now) => {
-      const next = now.filter((id) => id !== draggedId);
-      const targetIndex = next.indexOf(targetId);
-      next.splice(targetIndex + (after ? 1 : 0), 0, draggedId);
+  const reorderWhileDragging = (targetId: string) => {
+    const activeId=activeDragId.current;
+    if (!activeId || activeId === targetId) return;
+    updateOrder((now) => {
+      const from=now.indexOf(activeId);
+      const target=now.indexOf(targetId);
+      if(from<0||target<0||from===target) return now;
+      const next=[...now];
+      next.splice(from,1);
+      next.splice(target,0,activeId);
       return next;
     });
-    setDraggedId(null);
-    setDragOverId(null);
+  };
+  const autoScroll=(clientY:number)=>{
+    const edge=96;
+    if(clientY>window.innerHeight-edge) window.scrollBy({top:16,behavior:"auto"});
+    else if(clientY<edge) window.scrollBy({top:-16,behavior:"auto"});
+  };
+  const toggleCity=(cityId:(typeof cities)[number]["id"])=>{
+    setVisibleCityIds(current=>{
+      const next=new Set(current);
+      if(next.has(cityId)){
+        if(next.size===1) return current;
+        next.delete(cityId);
+      }else next.add(cityId);
+      return next;
+    });
   };
   return (
     <main>
@@ -197,8 +270,8 @@ export default function Home() {
               </div>
               <div className="kpi-card">
                 <span>Cobertura</span>
-                <strong>{categories.length} × {cities.length}</strong>
-                <small>categorías por lugares</small>
+                <strong>{categories.length} × {visibleCities.length}</strong>
+                <small>categorías por lugares visibles</small>
               </div>
             </div>
             <div className="ranking-grid">
@@ -245,7 +318,15 @@ export default function Home() {
                   El ranking considera simultáneamente las 16 categorías.
                 </p>
                 <div className="confidence">
-                  <span>Peso con evidencia Alta</span>
+                  <span>
+                    Peso con evidencia Alta
+                    <HelpTip label="¿Qué significa evidencia Alta?">
+                      Es el porcentaje del resultado actual que proviene de
+                      categorías con datos municipales o metropolitanos
+                      recientes y comparables. No mide la probabilidad de que
+                      la ciudad sea la correcta para ti.
+                    </HelpTip>
+                  </span>
                   <strong>{(highEvidenceShare * 100).toFixed(0)}%</strong>
                 </div>
                 <small>
@@ -265,106 +346,214 @@ export default function Home() {
                 </div>
                 <button
                   className="reset"
-                  onClick={() => setOrder(initialOrder)}
+                  onClick={() => updateOrder(() => initialOrder)}
                 >
                   ↺ Restablecer prioridades
                 </button>
               </div>
-              <div className="weight-summary" aria-live="polite">
-                <div>
-                  <span>🏆 Mejor opción con este orden</span>
-                  <strong>{candidates[0].name}</strong>
-                  <b>{candidates[0].score.toFixed(1)}/100</b>
-                </div>
-                <p>
-                  Pesos Rank-Order Centroid: prioridad 1 = {(
-                    priorityWeights[0] * 100
-                  ).toFixed(1)}%, prioridad 2 = {(
-                    priorityWeights[1] * 100
-                  ).toFixed(1)}% y prioridad 3 = {(
-                    priorityWeights[2] * 100
-                  ).toFixed(1)}%. Todas las categorías suman 100%.
-                </p>
-              </div>
-              <div className="weights-list">
-                {order.map((id, i) => {
-                  const c = categories.find((x) => x.id === id)!;
-                  return (
-                    <div
-                      className={`weight-row${draggedId === id ? " dragging" : ""}${dragOverId === id ? " drag-over" : ""}`}
-                      key={id}
-                      onDragOver={(event) => {
-                        event.preventDefault();
-                        setDragOverId(id);
-                      }}
-                      onDragLeave={() => setDragOverId(null)}
-                      onDrop={(event) => {
-                        event.preventDefault();
-                        const box=event.currentTarget.getBoundingClientRect();
-                        dropAt(id,event.clientY>box.top+box.height/2);
-                      }}
-                    >
-                      <button
-                        className="drag-handle"
-                        draggable
-                        aria-label={`Arrastrar ${c.name}`}
-                        title="Mantén y arrastra para cambiar la prioridad"
-                        onDragStart={(event) => {
-                          setDraggedId(id);
-                          event.dataTransfer.effectAllowed = "move";
-                          event.dataTransfer.setData("text/plain", id);
-                        }}
-                        onDragEnd={() => {
-                          setDraggedId(null);
-                          setDragOverId(null);
-                        }}
-                      >
-                        ⠿
-                      </button>
-                      <select
-                        aria-label={`Prioridad de ${c.name}`}
-                        value={i + 1}
-                        onChange={(e) => setRank(id, Number(e.target.value))}
-                      >
-                        {order.map((_, j) => (
-                          <option key={j} value={j + 1}>
-                            {j + 1}
-                          </option>
-                        ))}
-                      </select>
-                      <button
-                        className="cat-name"
-                        onClick={() => {
-                          setSelected(id);
-                          setView("matrix");
-                        }}
-                      >
-                        <span>{categoryEmoji[c.id]} {c.short}</span>
-                        <strong>{c.name}</strong>
-                      </button>
-                      <div className="weight-value">
-                        {(priorityWeights[i] * 100).toFixed(1)}
-                        %
-                      </div>
-                      <div className="arrows">
-                        <button
-                          aria-label={`Subir ${c.name}`}
-                          disabled={i === 0}
-                          onClick={() => move(id, -1)}
-                        >
-                          ↑
-                        </button>
-                        <button
-                          aria-label={`Bajar ${c.name}`}
-                          disabled={i === order.length - 1}
-                          onClick={() => move(id, 1)}
-                        >
-                          ↓
-                        </button>
-                      </div>
+              <div className="priority-workbench">
+                <div className="priority-column">
+                  <div className="priority-guide">
+                    <div>
+                      <strong>Prioridad 1 tiene más influencia</strong>
+                      <HelpTip label="¿Cómo funcionan las prioridades?">
+                        Imagina que repartes 100 fichas. La categoría número 1
+                        recibe más fichas que la 2, y así sucesivamente. Cada
+                        ciudad gana puntos según qué tan bien le va en las
+                        categorías que recibieron más fichas.
+                      </HelpTip>
                     </div>
-                  );
-                })}
+                    <p>
+                      Arrastra desde ⠿, usa las flechas o escribe la posición.
+                      El ranking de la derecha responde al instante.
+                    </p>
+                  </div>
+                  <div className="weights-list">
+                    {order.map((id, i) => {
+                      const c = categories.find((x) => x.id === id)!;
+                      return (
+                        <div
+                          ref={(element)=>{
+                            if(element) rowRefs.current.set(id,element);
+                            else rowRefs.current.delete(id);
+                          }}
+                          className={`weight-row${draggedId === id ? " dragging" : ""}${dragOverId === id ? " drag-over" : ""}`}
+                          data-category-id={id}
+                          key={id}
+                        >
+                          <button
+                            className="drag-handle"
+                            aria-label={`Arrastrar ${c.name}`}
+                            aria-pressed={draggedId===id}
+                            title="Mantén y arrastra para cambiar la prioridad"
+                            onPointerDown={(event) => {
+                              event.preventDefault();
+                              event.currentTarget.setPointerCapture(event.pointerId);
+                              activeDragId.current=id;
+                              setDraggedId(id);
+                              setDragOverId(id);
+                              document.body.classList.add("priority-drag-active");
+                            }}
+                            onPointerMove={(event)=>{
+                              if(activeDragId.current!==id) return;
+                              event.preventDefault();
+                              autoScroll(event.clientY);
+                              const target=(document.elementFromPoint(event.clientX,event.clientY) as HTMLElement|null)
+                                ?.closest<HTMLElement>(".weight-row")?.dataset.categoryId;
+                              if(target&&target!==id){
+                                setDragOverId(target);
+                                reorderWhileDragging(target);
+                              }
+                            }}
+                            onPointerUp={(event) => {
+                              if(event.currentTarget.hasPointerCapture(event.pointerId)){
+                                event.currentTarget.releasePointerCapture(event.pointerId);
+                              }
+                              activeDragId.current=null;
+                              setDraggedId(null);
+                              setDragOverId(null);
+                              document.body.classList.remove("priority-drag-active");
+                            }}
+                            onPointerCancel={() => {
+                              activeDragId.current=null;
+                              setDraggedId(null);
+                              setDragOverId(null);
+                              document.body.classList.remove("priority-drag-active");
+                            }}
+                          >
+                            ⠿
+                          </button>
+                          <select
+                            aria-label={`Prioridad de ${c.name}`}
+                            value={i + 1}
+                            onChange={(e) => setRank(id, Number(e.target.value))}
+                          >
+                            {order.map((_, j) => (
+                              <option key={j} value={j + 1}>
+                                {j + 1}
+                              </option>
+                            ))}
+                          </select>
+                          <button
+                            className="cat-name"
+                            onClick={() => {
+                              setSelected(id);
+                              setView("matrix");
+                            }}
+                          >
+                            <span>{categoryEmoji[c.id]} {c.short}</span>
+                            <strong>{c.name}</strong>
+                          </button>
+                          <div className="weight-value">
+                            <span>{(priorityWeights[i] * 100).toFixed(1)}%</span>
+                            <HelpTip label={`¿Qué significa el peso de ${c.name}?`}>
+                              Al estar en la posición {i+1}, esta categoría
+                              aporta {(priorityWeights[i]*100).toFixed(1)} de
+                              cada 100 puntos del cálculo final. Su peso cambia
+                              al moverla de lugar.
+                            </HelpTip>
+                          </div>
+                          <div className="arrows">
+                            <button
+                              aria-label={`Subir ${c.name}`}
+                              disabled={i === 0}
+                              onClick={() => move(id, -1)}
+                            >
+                              ↑
+                            </button>
+                            <button
+                              aria-label={`Bajar ${c.name}`}
+                              disabled={i === order.length - 1}
+                              onClick={() => move(id, 1)}
+                            >
+                              ↓
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+                <aside className="live-ranking" aria-live="polite">
+                  <div className="live-ranking-head">
+                    <div>
+                      <span>RESULTADO EN VIVO</span>
+                      <h3>Ranking actual</h3>
+                    </div>
+                    <HelpTip label="¿Cómo se calcula el ranking?">
+                      Para cada ciudad multiplicamos su nota de cada categoría
+                      por el peso que tú asignaste. Sumamos los 16 resultados y
+                      ordenamos de mayor a menor. Guadalajara no compite.
+                    </HelpTip>
+                  </div>
+                  <details className="city-filter">
+                    <summary>⚙️ Ciudades · {visibleCityIds.size}/11</summary>
+                    <div className="filter-popover">
+                      <div className="filter-title">
+                        <strong>Comparar destinos</strong>
+                        <button
+                          type="button"
+                          onClick={()=>setVisibleCityIds(new Set(cities.filter(city=>city.candidate).map(city=>city.id)))}
+                        >
+                          Mostrar todas
+                        </button>
+                      </div>
+                      {cities.filter(city=>city.candidate).map(city=>(
+                        <label key={city.id}>
+                          <input
+                            type="checkbox"
+                            checked={visibleCityIds.has(city.id)}
+                            disabled={visibleCityIds.has(city.id)&&visibleCityIds.size===1}
+                            onChange={()=>toggleCity(city.id)}
+                          />
+                          <span style={{"--city-color":city.color} as React.CSSProperties}/>
+                          {city.name}
+                        </label>
+                      ))}
+                      <small>Guadalajara permanece como referencia y no compite.</small>
+                    </div>
+                  </details>
+                  <div className="live-leader">
+                    <span>🏆 Mejor opción ahora</span>
+                    <strong>{candidates[0].name}</strong>
+                    <div>
+                      {candidates[0].score.toFixed(1)}/100
+                      <HelpTip label="¿Qué significa este score?">
+                        Es una suma ponderada de las 16 notas de esta ciudad con
+                        tus prioridades actuales. Sirve para comparar opciones,
+                        no para predecir que una mudanza tendrá éxito.
+                      </HelpTip>
+                    </div>
+                  </div>
+                  <div className="live-city-list">
+                    {candidates.map((city,index)=>(
+                      <div
+                        ref={(element)=>{
+                          if(element) cityRowRefs.current.set(city.id,element);
+                          else cityRowRefs.current.delete(city.id);
+                        }}
+                        className={`live-city-row${index===0?" leader":""}`}
+                        key={city.id}
+                      >
+                        <span>{index+1}</span>
+                        <strong>{city.name}</strong>
+                        <div className="bar-track">
+                          <div className="bar-fill" style={{width:`${city.score}%`,background:city.color}}/>
+                        </div>
+                        <b>{city.score.toFixed(1)}</b>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="live-benchmark">
+                    <span>Origen</span>
+                    <strong>Guadalajara</strong>
+                    <b>{benchmark.score.toFixed(1)}</b>
+                  </div>
+                  <p className="live-note">
+                    El orden puede cambiar aunque el líder permanezca igual.
+                    Observa también la distancia entre ciudades.
+                  </p>
+                </aside>
               </div>
             </div>
           </section>
@@ -387,7 +576,7 @@ export default function Home() {
               <thead>
                 <tr>
                   <th>Categoría</th>
-                  {cities.map((c) => (
+                  {visibleCities.map((c) => (
                     <th key={c.id}>{c.name}</th>
                   ))}
                 </tr>
@@ -404,10 +593,12 @@ export default function Home() {
                       <td>
                         <b>#{ranks[c.id]}</b> {categoryEmoji[c.id]} {c.short}
                       </td>
-                      {cities.map((city) => (
+                      {visibleCities.map((city) => (
                         <td key={city.id}>
                           <span
                             className="score-pill"
+                            aria-label={`${city.name}: ${c.values[city.id].score} de 100 en ${c.name}`}
+                            title={`${city.name}: ${c.values[city.id].score}/100 en ${c.name}. Selecciona esta fila para ver los datos y la fórmula.`}
                             style={{
                               background: scoreColor(c.values[city.id].score),
                             }}
@@ -437,7 +628,7 @@ export default function Home() {
               <b>Benchmark:</b> {cat.benchmark}
             </p>
             <div className="city-facts">
-              {cities.map((city) => {
+              {visibleCities.map((city) => {
                 const item = cat.values[city.id];
                 return (
                   <div key={city.id} className="fact-card">
