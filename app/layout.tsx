@@ -1,24 +1,16 @@
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-});
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-});
+const isGitHubPages = process.env.GITHUB_PAGES === 'true';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(isGitHubPages ? 'https://hradillo.github.io/norte-indice-migratorio/' : 'https://norte-indice-migratorio.hradillo7.chatgpt.site/'),
   title: 'Norte — Índice de Resiliencia para Migrar',
   description: 'Comparador reponderable de cinco ciudades canadienses, con Guadalajara como benchmark.',
   openGraph: {
     title: 'Norte — Índice de Resiliencia para Migrar',
     description: 'Cinco ciudades canadienses, Guadalajara como benchmark y 16 prioridades reordenables.',
-    images: ['/norte-social-preview.png'],
+    images: ['norte-social-preview.png'],
   },
 };
 
@@ -29,11 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
-      </body>
+      <body>{children}</body>
     </html>
   );
 }
